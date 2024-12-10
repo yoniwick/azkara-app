@@ -93,7 +93,6 @@ const Main: React.FC<{
       { name: "End of Shiva", date: `${shivaEnd.toDateString()} (${translateInputLabels("after Shacharit", language)})` },
       { name: "End of Shloshim", date: `${shloshimEnd.toDateString()} (${translateInputLabels("at sundown", language)})` },
       { name: "Yahrzeit", date: `${hebrewyahrzeitDate.toString()} (${yahrzeitWesternDate.toDateString()})` },
-      { name: "after Shacharit", date: `${hebrewyahrzeitDate.toString()} (${yahrzeitWesternDate.toDateString()})` },
     ]);
     setShowEvents(true);
   };
