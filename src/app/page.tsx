@@ -69,7 +69,7 @@ const Main: React.FC<{
 
     // Increment burial date if deathTime is "after"
     if (times.deathTime === "after") {
-      death.setDate(burial.getDate() + 1);
+      death.setDate(death.getDate() + 1);
     }
 
     const shivaEnd = new Date(burial);

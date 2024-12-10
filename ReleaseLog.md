@@ -17,4 +17,6 @@ Add Check if burial date is selected
 Add (after Shacharit) for End of Shiva
 Add  (at sundown) for End of Shloshim
 Add Spanish and French translations
+fixed mobile version layout
+impletmened useEffect with react for reactive function
 
