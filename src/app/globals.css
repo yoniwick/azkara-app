@@ -12,8 +12,85 @@ body {
   background: rgb(var(--background-rgb));
 }
 
-@media (max-width: 640px) {
+/* Typography Styles */
+.mobile-title {
+  font-size: 1.2rem; /* Default size for larger screens */
+  width: 80%;
+}
+
+.language-select {
+  font-size: 0.8rem; /* Default font size for larger screens */
+  padding: 0.1rem; /* Default padding */
+  border: 1px solid #ccc; /* Default border */
+  border-radius: 4px; /* Rounded corners */
+}
+
+/* Date Input Styles */
+.date-input {
+  width: 30%; /* Full width for date inputs */
+  padding: 0.3rem; /* Padding for better touch targets */
+  border: 1px solid #ccc; /* Border color */
+  border-radius: 10px; /* Rounded corners */
+  font-size: 0.9rem; /* Font size */
+  transition: border-color 0.3s ease; /* Smooth transition for border color */
+}
+
+/* Date Input States */
+.date-input:focus {
+  border-color: #007bff; /* Change border color on focus */
+  outline: none; /* Remove default outline */
+}
+
+.date-input:hover {
+  border-color: #0056b3; /* Darker border color on hover */
+}
+
+/* Flexbox Adjustments for Date Input Sections */
+.date-input-container {
+  display: flex;
+  justify-content: center; /* Center the sections horizontally */
+  width: 50%; /* Full width for the container */
+  flex-direction: row; /* Default to row layout */
+}
+
+.date-input-section {
+  width: 100%; /* Ensure full width for mobile */
+  padding: 0 10px; /* Add horizontal padding to prevent overflow */
+  box-sizing: border-box; /* Include padding in width calculation */
+}
+
+.date-input {
+  margin-top: 0.5rem; /* Add some space above the input */
+  width: 100%; /* Make the input take full width */
+}
+
+/* Media Queries for Responsive Design */
+@media (max-width: 600px) {
   .mobile-title {
-    font-size: 1.2rem;
+    font-size: 1rem; /* Smaller font size for mobile devices */
+    width: 85%;
+  }
+
+  .language-select {
+    font-size: 0.7rem; /* Smaller font size for mobile devices */
+    padding: 0.2rem; /* Adjusted padding for smaller screens */
+    width: 26%; /* Make it full width on mobile for better usability */
+  }
+
+  .date-input-container {
+    flex-direction: column; /* Stack sections vertically on mobile */
+    width: 100%; /* Full width for the container */
+  }
+
+  .date-input-section {
+    width: 100%; /* Ensure full width on mobile */
+    margin-bottom: 1rem; /* Space between stacked sections */
+    padding: 0 10px; /* Add horizontal padding to prevent overflow */
   }
 }
+
+/* Additional Styling for Better Appearance */
+.date-input-section .flex {
+  align-items: center; /* Aligns items vertically in the center */
+}
+

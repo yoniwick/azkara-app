@@ -20,3 +20,15 @@ Add Spanish and French translations
 fixed mobile version layout
 impletmened useEffect with react for reactive function
 
+Dec 16, 2024
+
+Change After Sundown to Checkbox
+Adjust layout for mobile
+Updated Upcoming Yahrzeit logic
+Created column for Hebrew Date
+Set shivaEnd to the day before the first Yom Tov (['Erev Pesach', 'Erev Shavuot', 'Erev Sukkot', 'Erev Rosh Hashana', 'Erev Yom Kippur'])
+Set shloshimEnd by the onset of the first Yom Tov ['Erev Pesach', 'Erev Shavuot', 'Erev Sukkot', 'Erev Rosh Hashana', 'Erev Yom Kippur']
+Add Hakamat Matzevah calculation
+Adjust Hakamat Matzevah calculation for leap years
+
+
