@@ -31,4 +31,13 @@ Set shloshimEnd by the onset of the first Yom Tov ['Erev Pesach', 'Erev Shavuot'
 Add Hakamat Matzevah calculation
 Adjust Hakamat Matzevah calculation for leap years
 
+Dec 20, 2024
+
+Added Burial Date to the table
+Moved the "Hebrew Date" column to be the second column in the table
+Show gregorian date begin after sundown for Hakamat Matzevah and Upcoming Yahrzeit in the table
+change end of shloshim to be after shacharit
+added Beginning of Shloshim
+Display Interrupted by Yom Tov if Shloshim ends on eve of a Yom Tov, and chol hamoed
+
 

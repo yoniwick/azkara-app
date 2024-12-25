@@ -45,7 +45,9 @@ const Main: React.FC<{
   language: string;
   showEvents: boolean;
   setShowEvents: React.Dispatch<React.SetStateAction<boolean>>;
-}> = ({ dates, setDates, times, setTimes, events, setEvents, language, showEvents, setShowEvents }) => {
+  deathDateFocused: boolean;
+  setDeathDateFocused: React.Dispatch<React.SetStateAction<boolean>>;
+}> = ({ dates, setDates, times, setTimes, events, setEvents, language, showEvents, setShowEvents, deathDateFocused, setDeathDateFocused }) => {
   useEffect(() => {
     calculateEvents(); // Trigger calculation when language changes
   }, [language]); // Dependency array includes language
@@ -87,7 +89,8 @@ const Main: React.FC<{
 
       // Check if the holiday is one of the specified Yom Tov
       return holidays.some(holiday => 
-        ['Erev Pesach', 'Erev Shavuot', 'Erev Sukkot', 'Erev Rosh Hashana', 'Erev Yom Kippur'].includes(holiday.desc)
+        ['Erev Pesach', 'Erev Shavuot', 'Erev Sukkot', 'Erev Yom Kippur', 'Yom Kippur','Pesach I', 'Pesach II', 'Pesach VII', 'Pesach VIII', 'Sukkot I', 'Sukkot II', 'Sukkot VII', 'Sukkot VIII'].includes(holiday.desc) ||
+        holiday.desc.includes("Rosh Hashana") || holiday.desc.includes("Pesach") || holiday.desc.includes("Shavuot") || holiday.desc.includes("Sukkot") || holiday.desc.includes("Yom Kippur") // Include any holiday with Pesach, Shavuot, Sukkot, Yom Kippur
       );
     };
 
@@ -122,27 +125,8 @@ const Main: React.FC<{
     shloshimEnd.setDate(shloshimEnd.getDate() + 31); // 30 days + 1 day since the day of burial is included
     const hebrewShloshimEnd = new HDate(shloshimEnd); // Convert to Hebrew date
 
-    // Check for holidays from burial date to shloshimEnd
-    let b = new Date(burial);
-    b.setDate(b.getDate() + 1); // Start with burial date + 1
-
-    console.log("Initial Shloshim End Date:", shloshimEnd);
-
-    // Use a more functional approach to find the first Yom Tov date for shloshimEnd
-    const shloshimHolidayDates = [];
-    while (b <= shloshimEnd) {
-      if (isYomTov(b)) {
-        shloshimHolidayDates.push(new Date(b)); // Collect Yom Tov dates for shloshim
-      }
-      b.setDate(b.getDate() + 1); // Increment b by 1 day
-    }
-
-    // If any Yom Tov dates were found, update shloshimEnd
-    if (shloshimHolidayDates.length > 0) {
-      const firstHoliday = shloshimHolidayDates[0];
-      shloshimEnd.setDate(firstHoliday.getDate()); // Set shloshimEnd by the onset of the first Yom Tov
-      console.log("Holiday found, updating Shloshim End to:", shloshimEnd);
-    }
+    const dayBeforeShloshimEnd = new Date(shloshimEnd);
+    dayBeforeShloshimEnd.setDate(dayBeforeShloshimEnd.getDate() - 1); // Set to the day before shloshimEnd
 
     const hebrewDeathDate = new HDate(death);
     const nexthebrewDeathDate = new HDate(hebrewDeathDate.abs() + 1); 
@@ -159,7 +143,7 @@ const Main: React.FC<{
     const isLeapYear = new HDate(hebrewBurialDate).isLeapYear();
     console.log("Is the year", hebrewBurialDate.getFullYear(), "a leap year?", isLeapYear); // Log the leap year status
 
-    const yahrzeitWesternDate = hebrewyahrzeitDate.greg();
+    const yahrzeitWesternDate = new Date(hebrewyahrzeitDate.greg().getTime() - 24 * 60 * 60 * 1000); // Subtract 1 day
 
     // Hakamat Matzevah calculation
     let newMonth = hebrewBurialDate.getMonth() + 11; // Add 11 months
@@ -177,14 +161,37 @@ const Main: React.FC<{
       newMonth,
       newYear
     );
-    const hakamatMatzevahDate = hebrewHakamatMatzevahDate.greg();
+    const hakamatMatzevahDate = new Date(hebrewHakamatMatzevahDate.greg().getTime() - 24 * 60 * 60 * 1000); // Subtract 1 day
+
+    // Function to check if a date is Chol Hamoed
+    const isCholHamoed = (date: Date): boolean => {
+        const hebrewDate = new HDate(date);
+        const holidays = HebrewCalendar.getHolidaysOnDate(hebrewDate) || []; // Provide empty array fallback
+        
+        // Log the Chol Hamoed holidays found
+        const cholHamoedHolidays = holidays.filter(holiday => 
+            holiday.desc.includes("(CH''M)")
+        );
+
+        if (cholHamoedHolidays.length > 0) {
+            console.log("Chol Hamoed holidays found on", date.toDateString() + ":", cholHamoedHolidays.map(holiday => holiday.desc).join(", "));
+        }
+
+        // Check if the holiday is Chol Hamoed
+        return cholHamoedHolidays.length > 0;
+    };
+
+    const isHebrewShloshimEndYomTov = isYomTov(shloshimEnd);
+    const isHebrewShloshimEndCholHamoed = isCholHamoed(shloshimEnd);
 
     setEvents([
-      { name: "Death Date", date: times.deathTime === "after" ? death.toDateString() : new Date(death.setDate(death.getDate() + 1)).toDateString(), hebrewDate: nexthebrewDeathDate.toString() },
-      { name: "End of Shiva", date: `${shivaEnd.toDateString()} (${translateInputLabels("after Shacharit", language)})`, hebrewDate: hebrewShivaEnd.toString() },
-      { name: "End of Shloshim", date: `${shloshimEnd.toDateString()} (${translateInputLabels("at sundown", language)})`, hebrewDate: hebrewShloshimEnd.toString() },
-      { name: "Hakamat Matzevah", date: `${hakamatMatzevahDate.toDateString()}`, hebrewDate: hebrewHakamatMatzevahDate.toString() },
-      { name: "Upcoming Yahrzeit", date: `${yahrzeitWesternDate.toDateString()}`, hebrewDate: hebrewyahrzeitDate.toString() },
+      { name: "Death Date", hebrewDate: nexthebrewDeathDate.toString(), date: times.deathTime === "after" ? death.toDateString() : new Date(death.setDate(death.getDate() + 1)).toDateString() },
+      { name: "Burial Date", hebrewDate: hebrewBurialDate.toString(), date: times.burialTime === "after" ? burial.toDateString() : new Date(burial.setDate(burial.getDate() + 1)).toDateString() },
+      { name: "End of Shiva", hebrewDate: hebrewShivaEnd.toString(), date: `${shivaEnd.toDateString()} (${translateInputLabels("after Shacharit", language)})` },
+      { name: "Beginning of Shloshim", hebrewDate: (isHebrewShloshimEndYomTov || isHebrewShloshimEndCholHamoed) ? "Interrupted by Yom Tov" : hebrewShloshimEnd.toString(), date: (isHebrewShloshimEndYomTov || isHebrewShloshimEndCholHamoed) ? "Interrupted by Yom Tov" : `${dayBeforeShloshimEnd.toDateString()} (${translateInputLabels("after sundown", language)})` },
+      { name: "End of Shloshim", hebrewDate: (isHebrewShloshimEndYomTov || isHebrewShloshimEndCholHamoed) ? "Interrupted by Yom Tov" : hebrewShloshimEnd.toString(), date: (isHebrewShloshimEndYomTov || isHebrewShloshimEndCholHamoed) ? "Interrupted by Yom Tov" : `${shloshimEnd.toDateString()} (${translateInputLabels("after Shacharit", language)})` },
+      { name: "Hakamat Matzevah", hebrewDate: hebrewHakamatMatzevahDate.toString(), date: `${hakamatMatzevahDate.toDateString()} (${translateInputLabels("after sundown", language)})` },
+      { name: "Upcoming Yahrzeit", hebrewDate: hebrewyahrzeitDate.toString(), date: `${yahrzeitWesternDate.toDateString()} (${translateInputLabels("after sundown", language)})` },
     ]);
     setShowEvents(true);
   };
@@ -199,8 +206,16 @@ const Main: React.FC<{
             <input
               type="date"
               value={dates.deathDate}
+              onFocus={() => {
+                if (!dates.burialDate) {
+                  alert("Please enter the Burial Date first."); // Alert if Burial Date is not set
+                } else {
+                  setDeathDateFocused(true); // Set focus state if Burial Date is set
+                }
+              }}
               onChange={(e) => setDates({ ...dates, deathDate: e.target.value })}
               className="border p-2 rounded mr-2 date-input"
+              disabled={!dates.burialDate}
             />
             <div className="flex items-center">
               <label className="mr-2">
@@ -213,6 +228,9 @@ const Main: React.FC<{
               </label>
             </div>
           </div>
+          { !dates.burialDate && deathDateFocused && (
+            <p className="text-red-500 text-sm">Please enter the Burial Date first.</p> // Message in red
+          )}
         </div>
         <div className="date-input-section flex flex-col items-left mb-4 date-input-section">
           <label className="mb-1 text-sm">{translateInputLabels("Enter Burial Date", language)}</label>
@@ -222,7 +240,7 @@ const Main: React.FC<{
               value={dates.burialDate}
               onChange={(e) => {
                 const selectedBurialDate = e.target.value;
-                if (new Date(selectedBurialDate) < new Date(dates.deathDate)) {
+                if (selectedBurialDate && selectedBurialDate !== "" && new Date(selectedBurialDate) < new Date(dates.deathDate)) {
                   alert("Burial date must be the same or after the death date.");
                   return;
                 }
@@ -250,8 +268,8 @@ const Main: React.FC<{
             <thead>
               <tr>
                 <th className="border border-gray-300 p-2">{translateInputLabels("Event", language)}</th>
-                <th className="border border-gray-300 p-2">{translateInputLabels("Date", language)}</th>
                 <th className="border border-gray-300 p-2">{translateInputLabels("Hebrew Date", language)}</th>
+                <th className="border border-gray-300 p-2">{translateInputLabels("Date", language)}</th>
               </tr>
             </thead>
             <tbody>
@@ -260,8 +278,8 @@ const Main: React.FC<{
                   <td className="border border-gray-300 p-2">
                     {translateInputLabels(event.name, language)}
                   </td>
-                  <td className="border border-gray-300 p-2">{event.date}</td>
                   <td className="border border-gray-300 p-2">{event.hebrewDate}</td>
+                  <td className="border border-gray-300 p-2">{event.date}</td>
                 </tr>
               ))}
             </tbody>
@@ -293,6 +311,7 @@ export default function Home() {
   const [events, setEvents] = useState<Event[]>([]);
   const [language, setLanguage] = useState<string>("en");
   const [showEvents, setShowEvents] = useState(false);
+  const [deathDateFocused, setDeathDateFocused] = useState(false); // New state to track focus
 
   return (
     <div>
@@ -307,6 +326,8 @@ export default function Home() {
         language={language} 
         showEvents={showEvents} 
         setShowEvents={setShowEvents} 
+        deathDateFocused={deathDateFocused} 
+        setDeathDateFocused={setDeathDateFocused} 
       />
       <Footer />
     </div>
@@ -330,6 +351,12 @@ const translateInputLabels = (label: string, language: string) => {
       "Calculate Events": "Calculate Events",
       "after Shacharit": "after Shacharit",
       "at sundown": "at sundown",
+      "Hebrew Date": "Hebrew Date",
+      "after sundown": "after sundown",
+      "Burial Date": "Burial Date",
+      "Beginning of Shloshim": "Beginning of Shloshim",
+      "Hakamat Matzevah": "Hakamat Matzevah",
+      "Interrupted by Yom Tov": "Interrupted by Yom Tov",
     },
     he: {
       "Enter Death Date": "הכנס תאריך פטירה:",
@@ -342,9 +369,15 @@ const translateInputLabels = (label: string, language: string) => {
       "End of Shloshim": "סוף שלושים",
       "Upcoming Yahrzeit": "יארצייט הקרוב",
       "Mourning Halachot": "הלכות אבלות לפי הרב דוד שלום נקי לספרדים",
-      "Calculate Events": "חשב אירועים",
+      "Calculate Events": "חשב אירועי",
       "after Shacharit": "אחרי שחרית",
       "at sundown": "בערב",
+      "Hebrew Date": "תאריך עברי",
+      "after sundown": "אחרי שקיעה",
+      "Burial Date": "תאריך קבורה",
+      "Beginning of Shloshim": "תחילת שלושים",
+      "Hakamat Matzevah": "הקמת מצבה",
+      "Interrupted by Yom Tov": "מופרע על ידי יום טוב",
     },
     ru: {
       "Enter Death Date": "Введите дату смерти:",
@@ -361,6 +394,12 @@ const translateInputLabels = (label: string, language: string) => {
       "Calculate Events": "Рассчитать события",
       "after Shacharit": "после Шахарита",
       "at sundown": "на закате",
+      "Hebrew Date": "Еврейская дата",
+      "after sundown": "После заката",
+      "Burial Date": "Дата похорон",
+      "Beginning of Shloshim": "Начало Шлошима",
+      "Hakamat Matzevah": "Установка надгробия",
+      "Interrupted by Yom Tov": "Прервано праздником",
     },
     es: {
       "Enter Death Date": "Ingrese la fecha de fallecimiento:",
@@ -377,6 +416,12 @@ const translateInputLabels = (label: string, language: string) => {
       "Calculate Events": "Calcular eventos",
       "after Shacharit": "después de Shajarit",
       "at sundown": "al atardecer",
+      "Hebrew Date": "Fecha hebrea",
+      "after sundown": "Después del atardecer",
+      "Burial Date": "Fecha de entierro",
+      "Beginning of Shloshim": "Inicio de Shloshim",
+      "Hakamat Matzevah": "Instalación de la lápida",
+      "Interrupted by Yom Tov": "Interrumpido por Yom Tov",
     },
     fr: {
       "Enter Death Date": "Entrez la date de décès :",
@@ -393,6 +438,12 @@ const translateInputLabels = (label: string, language: string) => {
       "Calculate Events": "Calculer les événements",
       "after Shacharit": "après Shaharit",
       "at sundown": "au coucher du soleil",
+      "Hebrew Date": "Date hébraïque",
+      "after sundown": "Après le coucher du soleil",
+      "Burial Date": "Date d'enterrement",
+      "Beginning of Shloshim": "Début de Shloshim",
+      "Hakamat Matzevah": "Installation de la pierre tombale",
+      "Interrupted by Yom Tov": "Interrompu par Yom Tov",
     },
   };
   return translations[language][label] || label;
